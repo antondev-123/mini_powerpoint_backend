@@ -52,6 +52,25 @@ app.delete("/slides/:id", async (req, res) => {
   }
 });
 
+app.post("/reset-db", async (req, res) => {
+  try {
+    if (req.query.secret !== process.env.RESET_SECRET) {
+      return res.status(403).send("Forbidden");
+    }
+    const db = require("./db"); // or wherever your DB instance is
+    db.run("DELETE FROM slides", (err) => {
+      if (err) {
+        console.error("Error clearing DB:", err);
+        return res.status(500).send("Failed to reset DB");
+      }
+      res.send("Database cleared successfully.");
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 
 sequelize.sync().then(() => {
