@@ -30,6 +30,6 @@ This is the backend API for **Mini PowerPoint**, a Markdown-based slide presenta
 
 ```bash
 npm install
-node server.js
+node index.js
 ```
 
