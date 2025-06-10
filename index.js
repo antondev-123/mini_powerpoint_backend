@@ -11,45 +11,30 @@ const sequelize = new Sequelize({
   storage: "database.sqlite",
 });
 
-const Slide = sequelize.define("Slide", {
+const Document = sequelize.define("Document", {
   content: {
     type: DataTypes.TEXT,
     allowNull: false,
   },
-  layout: {
-    type: DataTypes.STRING,
-    defaultValue: "default",
-  },
 });
 
-app.get("/slides", async (req, res) => {
-  const slides = await Slide.findAll();
-  res.json(slides);
-});
-
-app.post("/slides", async (req, res) => {
-  const slide = await Slide.create(req.body);
-  res.json(slide);
-});
-
-app.put("/slides/:id", async (req, res) => {
-  const slide = await Slide.findByPk(req.params.id);
-  if (slide) {
-    await slide.update(req.body);
-    res.json(slide);
-  } else {
-    res.status(404).send("Slide not found");
+app.get("/document", async (req, res) => {
+  let doc = await Document.findOne();
+  if (!doc) {
+    doc = await Document.create({ content: "# Welcome!\n\nStart editing..." });
   }
+  res.json(doc);
 });
 
-app.delete("/slides/:id", async (req, res) => {
-  const slide = await Slide.findByPk(req.params.id);
-  if (slide) {
-    await slide.destroy();
-    res.status(204).send();
+app.put("/document", async (req, res) => {
+  const { content } = req.body;
+  let doc = await Document.findOne();
+  if (!doc) {
+    doc = await Document.create({ content });
   } else {
-    res.status(404).send("Slide not found");
+    await doc.update({ content });
   }
+  res.json(doc);
 });
 
 app.post("/reset-db", async (req, res) => {
@@ -58,10 +43,12 @@ app.post("/reset-db", async (req, res) => {
       return res.status(403).send("Forbidden");
     }
 
-    await Slide.destroy({ where: {} }); // ✅ delete all rows
-    res.send("Database cleared successfully.");
+    await Document.destroy({ where: {} });
+    await Document.create({ content: "# Welcome!\n\nStart editing..." });
+
+    res.send("Document reset.");
   } catch (error) {
-    console.error("Error clearing DB:", error);
+    console.error("Error resetting document:", error);
     res.status(500).send("Server error");
   }
 });
@@ -69,5 +56,5 @@ app.post("/reset-db", async (req, res) => {
 const PORT = process.env.PORT || 3001;
 
 sequelize.sync().then(() => {
-  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
